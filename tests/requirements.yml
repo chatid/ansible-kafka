@@ -1,0 +1,4 @@
+---
+- name: chatid.zookeeper
+  src: git+git@github.com:chatid/ansible-zookeeper.git
+  version: v0.1.0

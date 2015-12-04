@@ -1,0 +1,42 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
+VAGRANTFILE_API_VERSION = "2"
+
+if (ARGV & %w(up provision)).any?
+  unless system('ansible-galaxy install -f -r requirements.yml -p ./roles')
+    puts "Looks like ansible-galaxy couldn't be run"
+    exit 1
+  end
+end
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  # All Vagrant configuration is done here. The most common configuration
+  # options are documented and commented below. For a complete reference,
+  # please see the online documentation at vagrantup.com.
+
+  # Every Vagrant virtual environment requires a box to build off of.
+  config.vm.box = "phusion/ubuntu-14.04-amd64"
+
+  config.vm.define 'zookeeper' do |machine|
+    machine.vm.hostname = 'zookeeper'
+    machine.vm.network "private_network", ip: "192.168.77.22"
+  end
+
+  config.vm.define 'kafka' do |machine|
+    machine.vm.hostname = 'kafka'
+    machine.vm.network "private_network", ip: "192.168.77.21"
+
+    machine.vm.provision "ansible" do |ansible|
+      ansible.limit = "all"
+      ansible.verbose = true
+      ansible.playbook = "test.yml"
+      ansible.extra_vars = {
+        role_name: Dir.pwd.split('/')[-2],
+        kafka_zookeeper_connect: "192.168.77.22:2181"
+      }
+    end
+  end
+
+end

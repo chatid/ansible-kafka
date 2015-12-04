@@ -1,0 +1,66 @@
+---
+# tasks file for chatid.kafka
+- name: install java
+  apt:
+    name: openjdk-7-jre-headless
+    update_cache: yes
+    cache_valid_time: 86400
+
+- name: create user
+  user:
+    name: kafka
+    createhome: no
+    system: yes
+
+- name: ensure folders
+  file:
+    path: '{{ item }}'
+    state: directory
+    owner: kafka
+    group: kafka
+  with_flattened:
+    - '{{ kafka_log_dir }}'
+    - '{{ kafka_data_dirs }}'
+
+- name: get kafka file(s)
+  get_url:
+    url: '{{ kafka_apache_mirror }}/kafka/{{ kafka_version }}/kafka_{{ kafka_scala_version }}-{{ kafka_version }}.tgz'
+    dest: /tmp/kafka_{{ kafka_scala_version }}-{{ kafka_version }}.tgz
+  register: get_url_result
+
+- name: extract kafka file(s)
+  unarchive:
+    src: /tmp/kafka_{{ kafka_scala_version }}-{{ kafka_version }}.tgz
+    dest: /tmp
+    copy: no
+  register: unarchive_result
+  when: get_url_result.changed
+
+- name: move into place
+  command: mv /tmp/kafka_{{ kafka_scala_version }}-{{ kafka_version }} /opt/kafka
+  when: unarchive_result.changed
+
+- name: ensure ownership
+  command: chown -R kafka:kafka /opt/kafka
+  changed_when: False
+
+- name: render config
+  template:
+    src: '{{ item }}'
+    dest: /opt/kafka/config/{{ item }}
+    owner: kafka
+    group: kafka
+  with_items:
+    - server.properties
+    - log4j.properties
+
+- name: render upstart config
+  template:
+    src: upstart.conf
+    dest: /etc/init/kafka.conf
+
+- name: enable service
+  service:
+    name: kafka
+    state: started
+

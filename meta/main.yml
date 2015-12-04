@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: Matt Wright <wright@chatid.com>
+  description: Installs and configures Kafka <http://kafka.apache.org/>
+  company: ChatID Inc.
+  license: MIT
+  platforms:
+    - name: Ubuntu
+      versions:
+        - trusty
+  categories:
+    - messaging
+    - streaming
+dependencies: []

@@ -1,0 +1,12 @@
+---
+- hosts: zookeeper
+  sudo: yes
+
+  roles:
+    - role: chatid.zookeeper
+
+- hosts: kafka
+  sudo: yes
+
+  roles:
+    - role: "{{ role_name }}"
